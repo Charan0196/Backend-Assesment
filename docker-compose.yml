@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: customer_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mock-server:
+    build: ./mock-server
+    ports:
+      - "5001:5000"        # ← Changed host port to 5001
+    depends_on:
+      - postgres
+
+  pipeline-service:
+    build: ./pipeline-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - mock-server
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/customer_db
+
+volumes:
+  postgres_data:
